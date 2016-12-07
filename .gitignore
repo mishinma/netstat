@@ -4,3 +4,13 @@
 # Compiled files
 **.pyc
 __pycache__
+
+# Text files
+**.txt
+
+# Spark dumps
+metastore_db/**
+
+# Misc files
+**.zip
+**.log
