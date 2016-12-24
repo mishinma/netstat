@@ -1,6 +1,8 @@
 .cache
 .idea
 
+*/tmp
+
 # Compiled files
 **.pyc
 __pycache__
