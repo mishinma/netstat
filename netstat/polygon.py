@@ -1,44 +1,83 @@
 import os
+import sys
+import h5py
 
 import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix, csgraph
 
 
-dirname = os.path.expanduser("~/docs/netstat/data")
-fname = os.path.join(dirname, "wiki-Vote_clean.txt")
+def load_graph_data(fname):
 
-# Nodes: 7115 Edges: 103689
-num_nodes = 7115
-num_edges = 103689
+    with open(fname, 'r') as f:
+        num_nodes, num_edges = map(int, next(f).split())
 
-graph_data = pd.read_csv(fname, sep=',', names=['FromNodeId', 'ToNodeId'],
-                 dtype={'FromNodeId': np.int64, 'ToNodeId': np.int64}, skiprows=4)
+    edges = pd.read_csv(fname, sep=' ', names=['FromNodeId', 'ToNodeId'],
+                             dtype={'FromNodeId': np.int64, 'ToNodeId': np.int64}, skiprows=1)
 
-graph_data = graph_data.values
+    return num_nodes, num_edges, edges
 
-# indptr = np.hstack([0, np.cumsum(np.bincount(graph_data[:,0]))])
-row_ind = graph_data[:, 0]
-col_ind = graph_data[:, 1]
-data = np.full(shape=num_edges, fill_value=1, dtype=np.uint8)
 
-graph = csr_matrix((data, (row_ind, col_ind)), shape=(num_nodes, num_nodes))
+def build_graph(num_nodes, num_edges, edges):
 
-dist_matrix = csgraph.shortest_path(graph, method='D', directed=False, unweighted=True)
-import pdb; pdb.set_trace()
-#
-# num_components, labels = csgraph.connected_components(graph, directed=False)
-# foo = np.bincount(labels, minlength=num_components)
+    edges = edges.values  # Access values as np array
 
-#
-#
-# wcc = csgraph.connected_components(graph)
-# _, counts = np.unique(wcc[1], return_counts=True)
-#
-# print "Num edges LWCC: {}".format(max(counts))
-#
-# scc = csgraph.connected_components(graph, connection='strong')
-# _, counts = np.unique(scc[1], return_counts=True)
-# print "Num edges LSCC: {}".format(max(counts))
+    row = edges[:, 0]
+    col = edges[:, 1]
+
+    row_counts = np.bincount(row, minlength=num_nodes)
+    indptr = np.hstack([0, np.cumsum(row_counts)])
+
+    data = np.full(shape=num_edges, fill_value=1, dtype=np.uint8)
+
+    graph = csr_matrix((data, col, indptr), shape=(num_nodes, num_nodes))
+
+    return graph
+
+
+def calculate_dist_matrix(graph, store_name, network_name, directed=False, save=True):
+
+    dist_matrix = csgraph.shortest_path(graph, method='D', directed=directed, unweighted=True)
+
+    if save:
+        with h5py.File(store_name) as f:
+            network_name = network_name + '-dir' if directed else network_name
+            dataset_name = 'shortest_paths/{}'.format(network_name)
+            f.create_dataset(dataset_name, data=dist_matrix)
+
+    return dist_matrix
+
+
+def calculate_connected_components(graph, store_name, network_name, connection='weak', save=True):
+
+    num_components, labels = csgraph.connected_components(graph, connection=connection)
+    _, counts = np.unique(labels, return_counts=True)
+
+    counts[::-1].sort()  # Sort in descending order
+
+    print "Num edges in the largest CC: {}".format(counts[0])
+
+    if save:
+        with h5py.File(store_name) as f:
+            network_name = network_name + '_' + connection
+            dataset_name = 'connected_components/{}'.format(network_name)
+            f.create_dataset(dataset_name, data=dist_matrix)
+
+    return num_components, labels, counts
+
+
+if __name__ == '__main__':
+    fname = sys.argv[1]
+    store = sys.argv[2]
+    network_name = os.path.splitext(os.path.basename(fname))[0]
+    if network_name.endswith('-clean'):
+        network_name = network_name[-6:]
+    print network_name
+    num_nodes, num_edges, graph_data = load_graph_data(fname)
+    graph = build_graph(num_nodes, num_edges, graph_data)
+    dist_matrix = calculate_dist_matrix(graph, store, network_name)
+
+
+
 
 
