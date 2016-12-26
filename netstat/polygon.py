@@ -61,7 +61,7 @@ def calculate_connected_components(graph, store_name, network_name, connection='
         with h5py.File(store_name) as f:
             network_name = network_name + '_' + connection
             dataset_name = 'connected_components/{}'.format(network_name)
-            f.create_dataset(dataset_name, data=dist_matrix)
+            f.create_dataset(dataset_name, data=labels)
 
     return num_components, labels, counts
 
