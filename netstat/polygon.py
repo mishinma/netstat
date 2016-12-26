@@ -71,11 +71,12 @@ if __name__ == '__main__':
     store = sys.argv[2]
     network_name = os.path.splitext(os.path.basename(fname))[0]
     if network_name.endswith('-clean'):
-        network_name = network_name[-6:]
+        network_name = network_name[:-6]
     print network_name
     num_nodes, num_edges, graph_data = load_graph_data(fname)
     graph = build_graph(num_nodes, num_edges, graph_data)
-    dist_matrix = calculate_dist_matrix(graph, store, network_name)
+    csgraph.breadth_first_order(graph, 0, directed=True)
+
 
 
 
