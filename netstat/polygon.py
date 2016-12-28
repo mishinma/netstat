@@ -51,15 +51,14 @@ def build_graph(num_nodes, num_edges, edges):
     return graph
 
 
-def get_lcc(graph, directed=True, connection='strong'):
+def get_lcc(graph, connection='strong'):
     """ Get the largest connected component and return it as a submatrix"""
 
     print "Finding the largest connected component..."
 
-    num_components, labels = csgraph.connected_components(graph, directed=directed, connection=connection)
+    num_components, labels = csgraph.connected_components(graph, connection=connection)
     lcc_label = np.argmax(np.bincount(labels))
     indices = np.nonzero(labels == lcc_label)[0]
-
     # Get the submatrix for the LCC
     # Before slicing the columns convert to the CSC sparse format
     lcc = graph[indices, :].tocsc()[:, indices].tocsr()
@@ -81,11 +80,14 @@ def breadth_first_search(graph, i_start, directed=True):
     return dist_distr
 
 
-def get_distance_distribution(graph, nodes, directed=True):
+def get_distance_distribution(graph, nodes=None, directed=True):
+
+    if nodes is None:
+        nodes = np.arange(graph.shape[0])
 
     print "Computing the distance distribution..."
 
-    dist_distr = np.zeros(shape=10, dtype=np.int32)
+    dist_distr = np.zeros(shape=100, dtype=np.int32)
 
     for node in nodes:
         node_dist_distr = breadth_first_search(graph, i_start=node, directed=directed)
@@ -94,6 +96,9 @@ def get_distance_distribution(graph, nodes, directed=True):
             dist_distr.resize(node_dist_distr.shape)
 
         dist_distr[:node_dist_distr.size] += node_dist_distr
+
+    if not directed:
+        dist_distr /= 2
 
     return dist_distr
 
@@ -108,9 +113,8 @@ if __name__ == '__main__':
     start_time = time.time()
     num_nodes, num_edges, graph_data = load_graph_data(fname)
     graph = build_graph(num_nodes, num_edges, graph_data)
-    lcc = get_lcc(graph, directed=True, connection='strong')
-    all_nodes = np.arange(lcc.shape[0])
-    dist_distr = get_distance_distribution(lcc, all_nodes, directed=True)
+    lcc = get_lcc(graph, connection='weak')
+    dist_distr = get_distance_distribution(lcc, directed=False)
     elapsed = (time.time() - start_time)
-    print "--- {} s ---".format(elapsed)
+    print "--- {} m ---".format(elapsed / 60)
     print "Done"
