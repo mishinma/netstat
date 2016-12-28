@@ -4,20 +4,21 @@ import numpy as np
 
 from numpy.testing import assert_equal
 from netstat.clean import clean_file
-from netstat.polygon import load_graph_data, build_graph
+from netstat.polygon import load_graph_data, build_graph, get_distance_distribution, \
+    breadth_first_search, get_lcc
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def network_fname(datadir):
     return os.path.join(datadir, 'network.txt')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def network_clean_expected_fname(datadir):
     return os.path.join(datadir, 'network-clean-expected.txt')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def network_clean_test_fname(datatmpdir):
     fname = os.path.join(datatmpdir, 'network-clean-test.txt')
     f = open(fname, 'w')
@@ -25,30 +26,39 @@ def network_clean_test_fname(datatmpdir):
     return fname
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def graph_data(network_clean_expected_fname):
     return load_graph_data(network_clean_expected_fname)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def num_nodes(graph_data):
     return graph_data[0]
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def num_edges(graph_data):
     return graph_data[1]
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def edges(graph_data):
     return graph_data[2]
 
 
-@pytest.fixture(scope='session')
-def graph_expected(datadir):
-    arr_name = os.path.join(datadir, 'graph.npy')
-    return np.load(arr_name)
+@pytest.fixture(scope='module')
+def graph(num_nodes, num_edges, edges):
+    return build_graph(num_nodes, num_edges, edges)
+
+
+@pytest.fixture(scope='module')
+def lscc(graph):
+    return get_lcc(graph, connection='strong')
+
+
+@pytest.fixture(scope='module')
+def lwcc(graph):
+    return get_lcc(graph, connection='weak')
 
 
 def test_clean_file(network_fname, network_clean_test_fname, network_clean_expected_fname):
@@ -58,6 +68,59 @@ def test_clean_file(network_fname, network_clean_test_fname, network_clean_expec
             assert f_test.read() == f_exp.read()
 
 
-def test_build_graph(num_nodes, num_edges, edges, graph_expected):
-    graph = build_graph(num_nodes, num_edges, edges)
+def test_build_graph(graph):
+    graph_expected = np.array([
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0]
+    ])
     assert_equal(graph.toarray(), graph_expected)
+
+
+def test_get_lcc_strong(lscc):
+    lscc_expected = np.array([
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 0, 0]
+    ])
+    assert_equal(lscc.toarray(), lscc_expected)
+
+
+def test_get_lcc_weak(lwcc):
+    lwcc_expected = np.array([
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+        [0, 1, 0, 0]
+    ])
+    assert_equal(lwcc.toarray(), lwcc_expected)
+
+
+def test_breadth_first_search_directed(lscc):
+    dist_distr = breadth_first_search(lscc, i_start=0, directed=True)
+    dist_distr_expected = np.array([1, 1])
+    assert_equal(dist_distr, dist_distr_expected)
+
+
+def test_breadth_first_search_undirected(lwcc):
+    dist_distr = breadth_first_search(lwcc, i_start=0, directed=False)
+    dist_distr_expected = np.array([1, 2])
+    assert_equal(dist_distr, dist_distr_expected)
+
+
+def test_get_distance_distribution_directed(lscc):
+    dist_distr = get_distance_distribution(lscc, directed=True)
+    dist_distr_expected = np.array([3, 3])
+    dist_distr_expected.resize(100)
+    assert_equal(dist_distr, dist_distr_expected)
+
+
+def test_get_distance_distribution_undirected(lwcc):
+    dist_distr = get_distance_distribution(lwcc, directed=False)
+    dist_distr_expected = np.array([4, 2])
+    dist_distr_expected.resize(100)
+    assert_equal(dist_distr, dist_distr_expected)
+
