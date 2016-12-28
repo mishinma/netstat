@@ -8,7 +8,20 @@ import pandas as pd
 from scipy.sparse import csr_matrix, csgraph
 
 
+# def timer(f):
+#     """A decorator for timing code"""
+#     def wrapper(*args, **kwargs):
+#         start_time = time.time()
+#         res = f(*args, **kwargs)
+#         elapsed = (time.time() - start_time)
+#         print "--- {} s ---".format(elapsed)
+#         return res
+#     return wrapper
+
+
 def load_graph_data(fname):
+
+    print "Loading the graph data..."
 
     with open(fname, 'r') as f:
         num_nodes, num_edges = map(int, next(f).split())
@@ -20,6 +33,8 @@ def load_graph_data(fname):
 
 
 def build_graph(num_nodes, num_edges, edges):
+
+    print "Building the adjacency matrix..."
 
     edges = edges.values  # Access values as np array
 
@@ -36,8 +51,10 @@ def build_graph(num_nodes, num_edges, edges):
     return graph
 
 
-def get_lcc(graph, directed=False, connection='weak'):
+def get_lcc(graph, directed=True, connection='strong'):
     """ Get the largest connected component and return it as a submatrix"""
+
+    print "Finding the largest connected component..."
 
     num_components, labels = csgraph.connected_components(graph, directed=directed, connection=connection)
     lcc_label = np.argmax(np.bincount(labels))
@@ -50,10 +67,35 @@ def get_lcc(graph, directed=False, connection='weak'):
     return lcc
 
 
-def breadth_first_dist(graph, i_start, directed=False):
+def breadth_first_search(graph, i_start, directed=True):
+
     nodes, predecessors = csgraph.breadth_first_order(graph, i_start=i_start, directed=directed)
-    dist = np.full(nodes.shape, -9999)
+
+    dist = np.empty(nodes.shape, dtype=np.int32)
     dist[i_start] = 0
+
+    for i in nodes[1:]:
+        dist[i] = dist[predecessors[i]] + 1
+
+    dist_distr = np.bincount(dist)[1:]  # Don't take zeros into account
+    return dist_distr
+
+
+def get_distance_distribution(graph, nodes, directed=True):
+
+    print "Computing the distance distribution..."
+
+    dist_distr = np.zeros(shape=10, dtype=np.int32)
+
+    for node in nodes:
+        node_dist_distr = breadth_first_search(graph, i_start=node, directed=directed)
+
+        if dist_distr.size < node_dist_distr.size:
+            dist_distr.resize(node_dist_distr.shape)
+
+        dist_distr[:node_dist_distr.size] += node_dist_distr
+
+    return dist_distr
 
 
 if __name__ == '__main__':
@@ -63,21 +105,12 @@ if __name__ == '__main__':
     if network_name.endswith('-clean'):
         network_name = network_name[:-6]
     print "Network name: " + network_name
+    start_time = time.time()
     num_nodes, num_edges, graph_data = load_graph_data(fname)
-    print "Building adjacency matrix..."
     graph = build_graph(num_nodes, num_edges, graph_data)
+    lcc = get_lcc(graph, directed=True, connection='strong')
+    all_nodes = np.arange(lcc.shape[0])
+    dist_distr = get_distance_distribution(lcc, all_nodes, directed=True)
+    elapsed = (time.time() - start_time)
+    print "--- {} s ---".format(elapsed)
     print "Done"
-    lcc = get_lcc(graph, directed=False, connection='weak')
-    breadth_first_dist(lcc, 1, directed=False)
-    # print "Running bfs..."
-    # start_time = time.time()
-    # # dist_matrix = calculate_dist_matrix(graph, store, network_name)
-    # csgraph.breadth_first_order(graph, 0, directed=True)
-    # elapsed = (time.time() - start_time)
-    # print "Done"
-    # print "--- {} seconds ---" .format(elapsed)
-    # print "--- {} minutes ---" .format(elapsed / 60)
-
-
-
-
