@@ -72,11 +72,11 @@ if __name__ == '__main__':
     else:
         lcc = pol.get_lcc(graph, connection='weak')
     start_time = time.time()
-    chunked_dist_distr = get_distance_distribution_parallel(lcc, False)
+    chunked_dist_distr = get_distance_distribution_parallel(lcc, directed)
     dist_distr = merge_distributions(chunked_dist_distr)
     elapsed = (time.time() - start_time)
     print '--- {} m ---'.format(elapsed / 60)
 
-    write_to_file(fname, dist_distr, False)
+    write_to_file(fname, dist_distr, directed)
 
     print 'Done'
