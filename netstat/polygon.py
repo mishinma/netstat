@@ -6,17 +6,18 @@ import time
 import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix, csgraph
+from netstat.graph import breadth_first_search
 
 
-# def timer(f):
-#     """A decorator for timing code"""
-#     def wrapper(*args, **kwargs):
-#         start_time = time.time()
-#         res = f(*args, **kwargs)
-#         elapsed = (time.time() - start_time)
-#         print "--- {} s ---".format(elapsed)
-#         return res
-#     return wrapper
+def timer(f):
+    """A decorator for timing code"""
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        res = f(*args, **kwargs)
+        elapsed = (time.time() - start_time)
+        print "--- {} s ---".format(elapsed)
+        return res
+    return wrapper
 
 
 def load_graph_data(fname):
@@ -67,21 +68,6 @@ def get_lcc(graph, connection='strong'):
     return lcc
 
 
-def breadth_first_search(graph, i_start, directed=True):
-    """ Run BFS and return distances from the start node """
-    nodes, predecessors = csgraph.breadth_first_order(graph, i_start=i_start, directed=directed)
-
-    dist = np.empty(nodes.shape, dtype=np.int32)
-    dist[i_start] = 0
-
-    # Create the distances from `nodes` and `predecessors`
-    for i in nodes[1:]:
-        dist[i] = dist[predecessors[i]] + 1
-
-    dist_distr = np.bincount(dist)[1:]  # Drop the zero distance
-    return dist_distr
-
-
 def get_distance_distribution(graph, nodes=None, directed=True):
     """ Get the distance distribution of a graph """
 
@@ -96,8 +82,10 @@ def get_distance_distribution(graph, nodes=None, directed=True):
     dist_distr = np.zeros(shape=100, dtype=np.int32)
 
     for node in nodes:
+        print "--- node {} ---".format(node)
         # Get the distance distribution from `node`
-        node_dist_distr = breadth_first_search(graph, i_start=node, directed=directed)
+        _, distances = breadth_first_search(graph, i_start=node, directed=directed)
+        node_dist_distr = np.bincount(distances)[1:]  # Drop the zero distance
 
         if dist_distr.size < node_dist_distr.size:
             dist_distr.resize(node_dist_distr.shape)
@@ -113,7 +101,7 @@ def get_distance_distribution(graph, nodes=None, directed=True):
 
 if __name__ == '__main__':
     fname = sys.argv[1]  # The name of a clean file as the first arg
-    # store = sys.argv[2] ? store something
+    # store = sys.argv[2]  # The name of an HDF store as the second arg
     network_name = os.path.splitext(os.path.basename(fname))[0]
     if network_name.endswith('-clean'):
         network_name = network_name[:-6]
@@ -121,8 +109,12 @@ if __name__ == '__main__':
     start_time = time.time()
     num_nodes, num_edges, graph_data = load_graph_data(fname)
     graph = build_graph(num_nodes, num_edges, graph_data)
-    lcc = get_lcc(graph, connection='weak')
+    lcc = get_lcc(graph, connection='strong')
     dist_distr = get_distance_distribution(lcc, directed=False)
+
+    # Store the distribution
+    # with h5py.File(store) as f:
+    #     f.create_dataset(network_name, data=dist_distr, dtype=np.int32)
     elapsed = (time.time() - start_time)
     print "--- {} m ---".format(elapsed / 60)
     print "Done"

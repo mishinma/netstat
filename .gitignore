@@ -1,8 +1,12 @@
 .cache
 .idea
+build
+newstat.egg-info
 
 */tmp
 
 # Compiled files
 **.pyc
+**.so
+**.c
 __pycache__
