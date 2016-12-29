@@ -68,7 +68,7 @@ def get_lcc(graph, connection='strong'):
     return lcc
 
 
-def get_distance_distribution(graph, nodes=None, directed=True):
+def get_distance_distribution(graph, nodes=None, directed=True, parallel=False):
     """ Get the distance distribution of a graph """
 
     if nodes is None:
@@ -82,7 +82,7 @@ def get_distance_distribution(graph, nodes=None, directed=True):
     dist_distr = np.zeros(shape=100, dtype=np.int32)
 
     for node in nodes:
-        print "--- node {} ---".format(node)
+        # print "--- node {} ---".format(node)
         # Get the distance distribution from `node`
         _, distances = breadth_first_search(graph, i_start=node, directed=directed)
         node_dist_distr = np.bincount(distances)[1:]  # Drop the zero distance
@@ -93,7 +93,7 @@ def get_distance_distribution(graph, nodes=None, directed=True):
         # Cumulatively add to other values
         dist_distr[:node_dist_distr.size] += node_dist_distr
 
-    if not directed:
+    if not directed and not parallel:
         dist_distr /= 2  # because dist(u,v) = dist(v,u)
 
     return dist_distr
