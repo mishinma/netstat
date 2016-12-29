@@ -5,6 +5,8 @@ import h5py
 import numpy as np
 import polygon as pol
 
+from scipy.sparse import csgraph
+
 
 def worker(graph, chunk, directed, output):
     dist_distr = pol.get_distance_distribution(graph, chunk, directed)
@@ -60,6 +62,27 @@ def get_distance_distribution_parallel(graph, directed=True):
     return distributions
 
 
+def sample_random_pairs(graph, k, directed):
+    # Sample k pairs
+    samples = np.random.choice(np.arange(graph.shape[0]), (k, 2))
+    dist_distr = np.zeros(shape=100, dtype=np.int32)
+    for i in range(len(samples)):
+        source_dist = csgraph.shortest_path(graph, method='auto', directed=directed, unweighted=False, indices=samples[i][0])
+        dist = int(source_dist[samples[i][1]])
+        if dist > dist_distr.size:
+            dist_distr.resize((dist+1,))
+        dist_distr[dist] += 1
+    dist_distr_trimmed = np.trim_zeros(dist_distr, 'b')
+    return dist_distr_trimmed
+
+
+def sample_random_sources(graph, k, directed):
+    samples = np.random.choice(np.arange(graph.shape[0]), k)
+    dist_distr = pol.get_distance_distribution(graph, samples, directed)
+    dist_distr_trimmed = np.trim_zeros(dist_distr, 'b')
+    return dist_distr_trimmed
+
+
 if __name__ == '__main__':
     fname = sys.argv[1]
     directed = False
@@ -72,10 +95,13 @@ if __name__ == '__main__':
     else:
         lcc = pol.get_lcc(graph, connection='weak')
     start_time = time.time()
-    chunked_dist_distr = get_distance_distribution_parallel(lcc, directed)
-    dist_distr = merge_distributions(chunked_dist_distr)
+    # chunked_dist_distr = get_distance_distribution_parallel(lcc, directed)
+    # dist_distr = merge_distributions(chunked_dist_distr)
+    # dist_distr = sample_random_pairs(lcc, 100, directed)
+    dist_distr = sample_random_sources(lcc, 100, directed)
+    print dist_distr
     elapsed = (time.time() - start_time)
     print '--- {} m ---'.format(elapsed / 60)
-    write_to_file(fname, dist_distr, directed)
+    # write_to_file(fname, dist_distr, directed)
 
     print 'Done'
