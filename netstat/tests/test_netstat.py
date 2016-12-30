@@ -4,7 +4,8 @@ import numpy as np
 
 from numpy.testing import assert_equal
 from netstat.clean import clean_file
-from netstat.polygon import load_graph_data, build_graph, get_distance_distribution, get_lcc
+from netstat.polygon import load_graph_data, build_graph, get_distance_distribution, \
+    get_lcc
 
 
 @pytest.fixture(scope='module')
@@ -101,13 +102,11 @@ def test_get_lcc_weak(lwcc):
 def test_get_distance_distribution_directed(lscc):
     dist_distr = get_distance_distribution(lscc, directed=True)
     dist_distr_expected = np.array([3, 3])
-    dist_distr_expected.resize(100)
-    assert_equal(dist_distr, dist_distr_expected)
+    assert_equal(dist_distr[1:3], dist_distr_expected)
 
 
 def test_get_distance_distribution_undirected(lwcc):
     dist_distr = get_distance_distribution(lwcc, directed=False)
     dist_distr_expected = np.array([4, 2])
-    dist_distr_expected.resize(100)
-    assert_equal(dist_distr, dist_distr_expected)
+    assert_equal(dist_distr[1:3], dist_distr_expected)
 

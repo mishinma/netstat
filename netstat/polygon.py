@@ -8,6 +8,7 @@ import pandas as pd
 from scipy.sparse import csr_matrix, csgraph
 from netstat.graph import breadth_first_search
 
+MAX_NUM_DIST = 101
 
 def timer(f):
     """A decorator for timing code"""
@@ -76,19 +77,17 @@ def get_distance_distribution(graph, nodes=None, directed=True, parallel=False):
 
     print "Computing the distance distribution..."
 
-    #ToDo: not sure if that's reasonable
     # Assume there will be at most 100 different distances in the distribution
-    # so that won't have to resize later
-    dist_distr = np.zeros(shape=100, dtype=np.int32)
+    # The actual length is 101 so that indices correspond to distances' values.
+    dist_distr = np.zeros(shape=MAX_NUM_DIST, dtype=np.int64)
 
     for node in nodes:
-        # print "--- node {} ---".format(node)
         # Get the distance distribution from `node`
         _, distances = breadth_first_search(graph, i_start=node, directed=directed)
-        node_dist_distr = np.bincount(distances)[1:]  # Drop the zero distance
+        node_dist_distr = np.bincount(distances, minlength=MAX_NUM_DIST)
 
         if dist_distr.size < node_dist_distr.size:
-            dist_distr.resize(node_dist_distr.shape)
+            dist_distr.resize(node_dist_distr.size)
 
         # Cumulatively add to other values
         dist_distr[:node_dist_distr.size] += node_dist_distr
@@ -110,8 +109,8 @@ if __name__ == '__main__':
     num_nodes, num_edges, graph_data = load_graph_data(fname)
     graph = build_graph(num_nodes, num_edges, graph_data)
     lcc = get_lcc(graph, connection='strong')
-    dist_distr = get_distance_distribution(lcc, directed=False)
-
+    dist_distr = get_distance_distribution(lcc, directed=True)
+    print dist_distr
     # Store the distribution
     # with h5py.File(store) as f:
     #     f.create_dataset(network_name, data=dist_distr, dtype=np.int32)
