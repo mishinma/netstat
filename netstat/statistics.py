@@ -1,36 +1,40 @@
-import os
-import h5py
+""" Module for calculating graph statistics """
 
 import numpy as np
-import pandas as pd
 
-import matplotlib.pyplot as plt
 
-dirname = os.path.expanduser("~/docs/netstat/")
-fname = os.path.join(dirname, "dist_matrix.h5")
+def get_distance_of_index(index, dist_distr):
+    i = 0
+    upper_bound = dist_distr[i]
+    while index > upper_bound:
+        i += 1
+        upper_bound += dist_distr[i]
+    # Index i represents distance i+1
+    return i+1
 
-with h5py.File(fname, 'r') as f:
-    dist_matrix = f['wiki_vote'][:]
 
-num_nodes = 7115
+def compute_median(dist_distr):
+    median_index = np.median(np.arange(np.sum(dist_distr)))
+    is_integer = median_index == int(median_index)
+    dist = get_distance_of_index(int(median_index), dist_distr)
+    if is_integer:
+        return dist
+    else:
+        return (2*dist+1)/2.0
 
-dist = dist_matrix[np.triu_indices(num_nodes, 1)]
-dist = dist[dist > 0]
-#
-# n, bins, patches = plt.hist(dist, bins='auto', facecolor='green', alpha=0.75)
-#
-# plt.xlabel('Distance')
-# plt.ylabel('Probability')
-# plt.grid(True)
-#
-# plt.show()
 
-median_dist = np.median(dist)
-mean_dist = np.mean(dist)
-diameter = np.max(dist)
-eff_diameter = np.percentile(dist, 90, interpolation='linear')
+def compute_eff_diameter(dist_distr):
+    eff_diameter_index = np.percentile(np.arange(np.sum(dist_distr)), 90, interpolation='linear')
+    dist = get_distance_of_index(int(eff_diameter_index), dist_distr)
+    return dist
 
-print 'Median distance: {}'.format(median_dist)
-print 'Mean distance: {}'.format(mean_dist)
-print 'Diameter: {}'.format(diameter)
-print 'Effective diameter: {}'.format(eff_diameter)
+
+def compute_statistics(dist_distr):
+    mean = np.sum([(i+1)*dist_distr[i] for i in xrange(dist_distr.size)])/float(np.sum(dist_distr))
+    median = compute_median(dist_distr)
+    diameter = dist_distr.size
+    eff_diameter = compute_eff_diameter(dist_distr)
+    print 'Mean: %d' % mean
+    print 'Median: %d' % median
+    print 'Diameter: %d' % diameter
+    print 'Effective Diameter: %d' % eff_diameter
