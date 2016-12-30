@@ -31,7 +31,9 @@ def mode(distr):
     return distr.size - 1
 
 
-def get_statistics(distr):
+def compute_statistics(distr):
+    # Trim zeros and normalize
+    distr = np.trim_zeros(distr, trim='b')
     distr = normalize(distr)
     return (
         mean(distr),

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix, csgraph
 from netstat.graph import breadth_first_search
+from netstat.statistics import compute_statistics
 
 MAX_NUM_DIST = 101
 
@@ -69,8 +70,14 @@ def get_lcc(graph, connection='strong'):
     return lcc
 
 
-def get_distance_distribution(graph, nodes=None, directed=True, parallel=False):
-    """ Get the distance distribution of a graph """
+def get_distance_distribution(graph, nodes=None, directed=True):
+    """ Get the distance distribution of a graph
+
+        Returns the distribution in the following format:
+
+            ind:  x 1 2 3 4 5 6 ... 100 (or maximum dist)
+            val:  0 2 4 2 1 0 1 ... 0
+    """
 
     if nodes is None:
         nodes = np.arange(graph.shape[0])  # Run for all nodes
@@ -92,8 +99,7 @@ def get_distance_distribution(graph, nodes=None, directed=True, parallel=False):
         # Cumulatively add to other values
         dist_distr[:node_dist_distr.size] += node_dist_distr
 
-    if not directed and not parallel:
-        dist_distr /= 2  # because dist(u,v) = dist(v,u)
+    dist_distr[0] = 0  # Set to 0 so it doesn't affect the distribution
 
     return dist_distr
 
@@ -108,9 +114,15 @@ if __name__ == '__main__':
     start_time = time.time()
     num_nodes, num_edges, graph_data = load_graph_data(fname)
     graph = build_graph(num_nodes, num_edges, graph_data)
-    lcc = get_lcc(graph, connection='strong')
-    dist_distr = get_distance_distribution(lcc, directed=True)
+    lcc = get_lcc(graph, connection='weak')
+    dist_distr = get_distance_distribution(lcc, directed=False)
     print dist_distr
+    mn, mdn, diam, eff_diam = compute_statistics(dist_distr)
+    print "Mean {}".format(mn)
+    print "Median {}".format(mdn)
+    print "Diameter {}".format(diam)
+    print "Eff diameter {}".format(eff_diam)
+
     # Store the distribution
     # with h5py.File(store) as f:
     #     f.create_dataset(network_name, data=dist_distr, dtype=np.int32)
