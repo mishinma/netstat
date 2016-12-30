@@ -5,12 +5,21 @@ import h5py
 import numpy as np
 import polygon as pol
 
-from scipy.sparse import csgraph
-from netstat.statistics import compute_statistics
+from netstat.statistics import compute_statistics, get_distance_of_index
 
 
-def worker(graph, chunk, directed, output):
+def source_worker(graph, chunk, directed, output):
     dist_distr = pol.get_distance_distribution(graph, chunk, directed, True)
+    output.put(dist_distr)
+
+
+def pair_worker(graph, chunk, directed, output):
+    for pair in chunk:
+        source_dist = pol.get_distance_distribution(graph, [pair[0]], directed)
+        dist = get_distance_of_index(pair[1], source_dist)
+        if dist > dist_distr.size:
+            dist_distr.resize(dist+1)
+        dist_distr[dist] += 1
     output.put(dist_distr)
 
 
@@ -31,7 +40,7 @@ def write_to_file(fname, data, directed=True):
 
 
 def merge_distributions(queue, directed):
-    dist_distr = np.zeros(shape=100, dtype=np.int32)
+    dist_distr = np.zeros(shape=100, dtype=np.int64)
 
     while not queue.empty():
         chunk_dist = queue.get()
@@ -45,8 +54,9 @@ def merge_distributions(queue, directed):
     return dist_distr_trimmed
 
 
-def get_distance_distribution_parallel(graph, directed=True):
-    nodes = np.arange(graph.shape[0])
+def get_distance_distribution_parallel(graph, nodes=None, directed=True):
+    if nodes is None:
+        nodes = np.arange(graph.shape[0])
     # Shared queue for output
     distributions = multiprocessing.Queue()
     cores = multiprocessing.cpu_count()
@@ -55,7 +65,7 @@ def get_distance_distribution_parallel(graph, directed=True):
     chunks = np.array_split(nodes, cores)
 
     for i in range(cores):
-        proc = multiprocessing.Process(target=worker, args=(graph, chunks[i], directed, distributions))
+        proc = multiprocessing.Process(target=source_worker, args=(graph, chunks[i], directed, distributions))
         processes.append(proc)
         proc.start()
 
@@ -66,17 +76,34 @@ def get_distance_distribution_parallel(graph, directed=True):
 
 
 def sample_random_pairs(graph, k, directed):
-    # Sample k pairs
     samples = np.random.choice(np.arange(graph.shape[0]), (k, 2))
-    dist_distr = np.zeros(shape=100, dtype=np.int32)
-    for i in range(len(samples)):
-        source_dist = csgraph.shortest_path(graph, method='auto', directed=directed, unweighted=True, indices=samples[i][0])
-        dist = int(source_dist[samples[i][1]])
+    dist_distr = np.zeros(shape=100, dtype=np.int64)
+    for pair in samples:
+        source_dist = pol.get_distance_distribution(graph, [pair[0]], directed)
+        dist = get_distance_of_index(pair[1], source_dist)
         if dist > dist_distr.size:
-            dist_distr.resize((dist+1,))
+            dist_distr.resize(dist+1)
         dist_distr[dist] += 1
-    dist_distr_trimmed = np.trim_zeros(dist_distr, 'b')
-    return dist_distr_trimmed
+    return np.trim_zeros(dist_distr, 'b')
+
+
+def sample_random_pairs_parallel(graph, k, directed):
+    distributions = multiprocessing.Queue()
+    cores = multiprocessing.cpu_count()
+    processes = []
+    samples = np.random.choice(np.arange(graph.shape[0]), (k, 2))
+    # Split evenly into chunks for each available cpu
+    chunks = np.array_split(samples, cores)
+
+    for i in range(cores):
+        proc = multiprocessing.Process(target=pair_worker, args=(graph, chunks[i], directed, distributions))
+        processes.append(proc)
+        proc.start()
+
+    for proc in processes:
+        proc.join()
+
+    return merge_distributions(distributions, directed)
 
 
 def sample_random_sources(graph, k, directed):
@@ -84,6 +111,11 @@ def sample_random_sources(graph, k, directed):
     dist_distr = pol.get_distance_distribution(graph, samples, directed)
     dist_distr_trimmed = np.trim_zeros(dist_distr, 'b')
     return dist_distr_trimmed
+
+
+def sample_random_sources_parallel(graph, k, directed):
+    samples = np.random.choice(np.arange(graph.shape[0]), k)
+    return get_distance_distribution_parallel(graph, samples, directed)
 
 
 if __name__ == '__main__':
@@ -98,9 +130,9 @@ if __name__ == '__main__':
     else:
         lcc = pol.get_lcc(graph, connection='weak')
     start_time = time.time()
-    dist_distr = get_distance_distribution_parallel(lcc, directed)
+    dist_distr = get_distance_distribution_parallel(lcc, directed=directed)
     # dist_distr = sample_random_pairs(lcc, 100, directed)
-    # dist_distr = sample_random_sources(lcc, 100, directed)
+    # dist_distr = sample_random_sources_parallel(lcc, 100, directed)
     print dist_distr
     compute_statistics(dist_distr)
     elapsed = (time.time() - start_time)
