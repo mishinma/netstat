@@ -18,7 +18,7 @@ def binrepr(arr, l=None):
     """ Helper function for printing arrays in binary repr"""
 
     if l is None:
-        l = int(ceil(log(max(arrs), 2)))
+        l = int(ceil(log(max(arr), 2)))
 
     res = np.empty_like(arr, dtype='S{}'.format(l))
 
