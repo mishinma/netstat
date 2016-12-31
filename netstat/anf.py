@@ -138,7 +138,7 @@ def _anf0_directed(graph, num_dist, Mcur, approx_N):
         approx_N[h] = np.sum(approx_IN)
 
 
-def _anf0_undirected(num_dist, Mcur, approx_N):
+def _anf0_undirected(graph, num_dist, Mcur, approx_N):
     for h in range(1, num_dist+1):
         Mlast = Mcur.copy()
 
