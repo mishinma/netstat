@@ -4,8 +4,8 @@ import numpy as np
 
 from numpy.testing import assert_equal
 from netstat.clean import clean_file
-from netstat.polygon import load_graph_data, build_graph, get_distance_distribution, \
-    get_lcc
+from netstat.exact import exact_distance_distribution
+from netstat.util import load_graph_data, build_graph, largest_connected_component
 
 
 @pytest.fixture(scope='module')
@@ -53,12 +53,12 @@ def graph(num_nodes, num_edges, edges):
 
 @pytest.fixture(scope='module')
 def lscc(graph):
-    return get_lcc(graph, connection='strong')
+    return largest_connected_component(graph, connection='strong')
 
 
 @pytest.fixture(scope='module')
 def lwcc(graph):
-    return get_lcc(graph, connection='weak')
+    return largest_connected_component(graph, connection='weak')
 
 
 def test_clean_file(network_fname, network_clean_test_fname, network_clean_expected_fname):
@@ -80,7 +80,7 @@ def test_build_graph(graph):
     assert_equal(graph.toarray(), graph_expected)
 
 
-def test_get_lcc_strong(lscc):
+def test_largest_connected_component_strong(lscc):
     lscc_expected = np.array([
         [0, 1, 0],
         [0, 0, 1],
@@ -89,7 +89,7 @@ def test_get_lcc_strong(lscc):
     assert_equal(lscc.toarray(), lscc_expected)
 
 
-def test_get_lcc_weak(lwcc):
+def test_largest_connected_component_weak(lwcc):
     lwcc_expected = np.array([
         [0, 1, 0, 0],
         [0, 0, 1, 0],
@@ -99,14 +99,13 @@ def test_get_lcc_weak(lwcc):
     assert_equal(lwcc.toarray(), lwcc_expected)
 
 
-def test_get_distance_distribution_directed(lscc):
-    dist_distr = get_distance_distribution(lscc, directed=True)
+def test_exact_distance_distribution_directed(lscc):
+    dist_distr = exact_distance_distribution(lscc, directed=True)
     dist_distr_expected = np.array([3, 3])
     assert_equal(dist_distr[1:3], dist_distr_expected)
 
 
-def test_get_distance_distribution_undirected(lwcc):
-    dist_distr = get_distance_distribution(lwcc, directed=False)
+def test_exact_distance_distribution_undirected(lwcc):
+    dist_distr = exact_distance_distribution(lwcc, directed=False)
     dist_distr_expected = np.array([4, 2])
     assert_equal(dist_distr[1:3], dist_distr_expected)
-

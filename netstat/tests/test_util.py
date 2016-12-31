@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from numpy.testing import assert_equal
-from netstat.anf import least_zero_bit
+from netstat.approx import least_zero_bit
 
 
 @pytest.mark.parametrize("arr, least_zero_bit_exp", [
@@ -12,6 +12,6 @@ from netstat.anf import least_zero_bit
     (np.array([[0, 1, 2], [3, 4, 5]]),
      np.array([[0, 1, 0], [2, 0, 1]]))
 ])
-def test_mean(arr, least_zero_bit_exp):
+def test_least(arr, least_zero_bit_exp):
     lzb = least_zero_bit(arr)
     assert_equal(lzb, least_zero_bit_exp)
