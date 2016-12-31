@@ -7,14 +7,19 @@ from math import log, ceil
 from itertools import izip
 from scipy import stats, sparse
 from netstat.polygon import build_graph, load_graph_data, get_lcc
+from netstat.statistics import compute_statistics
 
 
 P = .5
 PHI = .77359  # Proportionality constant
 
 
-def binrepr(arr, l):
+def binrepr(arr, l=None):
     """ Helper function for printing arrays in binary repr"""
+
+    if l is None:
+        l = int(ceil(log(max(arrs), 2)))
+
     res = np.empty_like(arr, dtype='S{}'.format(l))
 
     if res.ndim == 1:
@@ -121,6 +126,7 @@ def anf0(graph, k, r, num_dist=None, nodes=None, directed=True):
         _anf0_undirected(graph, num_dist, Mcur, approx_N)
 
     approx_N[1:] -= approx_N[:-1].copy()  # "Reverse" cumsum
+    approx_N[0] = 0
 
     return approx_N
 
@@ -156,6 +162,12 @@ if __name__ == '__main__':
     float_formatter = lambda x: "%.3f" % x
     np.set_printoptions(formatter={'float_kind': float_formatter})
     fname = sys.argv[1]  # The name of a clean file as the first arg
+    try:
+        sys.argv[2] == 'undir'
+    except:
+        directed, connection = True, 'strong'
+    else:
+        directed, connection = False, 'weak'
     # store = sys.argv[2]  # The name of an HDF store as the second arg
     network_name = os.path.splitext(os.path.basename(fname))[0]
     if network_name.endswith('-clean'):
@@ -164,10 +176,15 @@ if __name__ == '__main__':
     start_time = time.time()
     num_nodes, num_edges, graph_data = load_graph_data(fname)
     graph = build_graph(num_nodes, num_edges, graph_data)
-    lcc = get_lcc(graph, connection='strong')
+    lcc = get_lcc(graph, connection=connection)
     print "Nodes: {}, Edges {}".format(lcc.shape[0], lcc.data.shape[0])
-    N = anf0(lcc, k=3, r=0, num_dist=20)
+    N = anf0(lcc, k=50, r=1, num_dist=10, directed=directed)
     print N
+    mn, mdn, diam, eff_diam = compute_statistics(N)
+    print "Mean {}".format(mn)
+    print "Median {}".format(mdn)
+    print "Diameter {}".format(diam)
+    print "Eff diameter {}".format(eff_diam)
     elapsed = (time.time() - start_time)
     print "--- {} m ---".format(elapsed / 60)
     print "Done"
