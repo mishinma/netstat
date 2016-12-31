@@ -4,12 +4,6 @@ import argparse
 EXACT = 'e'
 APPROX = 'a'
 
-def run_exact(graph, directed=True):
-    pass
-
-def run_approx(graph, directed=True):
-    pass
-
 parser = argparse.ArgumentParser()
 parser.add_argument("fname", help="Filename to read")
 parser.add_argument("-m", "--mode", choices=[EXACT, APPROX])
@@ -22,6 +16,12 @@ parser.add_argument("-m", "--mode", choices=[EXACT, APPROX])
 args = parser.parse_args()
 
 if args.mode is EXACT:
-    run_exact()
+    # ToDo: get exact distribution
+    pass
 else:
-    run_approx()
+    # ToDo: get approx distribution
+    # anf0 by default, other methods passed as parameters?
+    pass
+
+# ToDo:  Get statistics from the distribution
+# ToDo: Print statistics
