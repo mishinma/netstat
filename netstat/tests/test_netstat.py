@@ -107,5 +107,5 @@ def test_exact_distance_distribution_directed(lscc):
 
 def test_exact_distance_distribution_undirected(lwcc):
     dist_distr = exact_distance_distribution(lwcc, directed=False)
-    dist_distr_expected = np.array([4, 2])
+    dist_distr_expected = np.array([8, 4])
     assert_equal(dist_distr[1:3], dist_distr_expected)
