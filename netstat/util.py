@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 
 from math import ceil, log
-from scipy.sparse import csr_matrix, csgraph, stats
+from scipy import stats
+from scipy.sparse import csr_matrix, csgraph
 
 
 def load_graph_data(fname):
