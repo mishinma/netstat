@@ -11,7 +11,7 @@ from netstat.statistics import compute_statistics
 
 
 P = .5
-PHI = .77359  # Proportionality constant
+PHI = .77351  # Proportionality constant
 
 
 def binrepr(arr, l=None):
