@@ -47,7 +47,8 @@ def run_random_sources(graph, k, directed=True, parallel=True):
 
 def run_anf(graph, k, r, num_dist, directed=True, parallel=False):
     if parallel:
-        print "Parallel version not implemented - running single core..."
+        print "Parallel version not implemented!"
+    print "Running single core version..."
     dist_distr = anf0(graph, k=k, r=r, num_dist=num_dist, directed=directed)
     return dist_distr
 
@@ -56,7 +57,7 @@ def run_netstat(fname, mode, clean=False, parallel=True, directed=False,
                 connection='strong', **kwargs):
 
     if clean:
-        print "Cleaning the file"
+        print "Cleaning the file..."
         root, ext = os.path.splitext(fname)
         fname_new = root + '-clean' + ext
         clean_file(fname, fname_new)
@@ -75,6 +76,12 @@ def run_netstat(fname, mode, clean=False, parallel=True, directed=False,
 
     print "Computing the distance distribution..."
 
+    if not mode == ANF:
+        if parallel:
+            print "Running parallel version..."
+        else:
+            print "Running single core version..."
+
     start_time = time.time()
 
     if mode == EXACT:
@@ -85,13 +92,13 @@ def run_netstat(fname, mode, clean=False, parallel=True, directed=False,
             k = kwargs['k']
             if k > lcc.shape[0]:
                 print "Sample size is bigger than amount of available nodes. "\
-                      "Running with complete graph."
+                      "Running with complete graph..."
                 k = lcc.shape[0]
         except KeyError:
             p = kwargs['p']
             if p > 100:
                 print "Provided percentage is larger than 100%. "\
-                      "Running with complete graph."
+                      "Running with complete graph..."
                 p = 100
             k = int(float(p)/100*lcc.shape[0])
 
