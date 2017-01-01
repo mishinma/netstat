@@ -34,7 +34,7 @@ diameter and effective diameter) for large networks.
    To run Netstat in the command line you should use the script `netstat-run`. 
    The usage is as follows:
    ```
-   netstat [-h] [-c] [-s] [-u] fname {exact,randp,rands,anf} ...
+   netstat-run [-h] [-c] [-s] [-u] fname {exact,randp,rands,anf} ...
    ```
    
    Positional arguments:
