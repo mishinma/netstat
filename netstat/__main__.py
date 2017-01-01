@@ -8,7 +8,8 @@ from netstat.clean import clean_file
 from netstat.util import largest_connected_component, \
     load_graph_data, build_graph, print_statistics
 from netstat.statistics import compute_statistics
-from netstat.approx import anf0
+from netstat.exact import exact_distance_distribution
+from netstat.approx import anf0, sample_random_pairs, sample_random_sources
 from netstat.parallel import exact_distance_distribution_parallel, \
     sample_random_pairs_parallel, sample_random_sources_parallel
 
@@ -18,23 +19,35 @@ RAND_SOURCES = 'rands'
 ANF = 'anf'
 
 
-def run_exact(graph, directed=True):
-    dist_distr = exact_distance_distribution_parallel(graph,
-                                         directed=directed)
+def run_exact(graph, directed=True, parallel=True):
+    if parallel:
+        dist_distr = exact_distance_distribution_parallel(graph,
+                                             directed=directed)
+    else:
+        dist_distr = exact_distance_distribution(graph,
+                                                 directed=directed)
     return dist_distr
 
 
-def run_random_pairs(graph, k, directed=True):
-    dist_distr = sample_random_pairs_parallel(graph, k, directed=directed)
+def run_random_pairs(graph, k, directed=True, parallel=True):
+    if parallel:
+        dist_distr = sample_random_pairs_parallel(graph, k, directed=directed)
+    else:
+        dist_distr = sample_random_pairs(graph, k, directed=directed)
     return dist_distr
 
 
-def run_random_sources(graph, k, directed=True):
-    dist_distr = sample_random_sources_parallel(graph, k, directed=directed)
+def run_random_sources(graph, k, directed=True, parallel=True):
+    if parallel:
+        dist_distr = sample_random_sources_parallel(graph, k, directed=directed)
+    else:
+        dist_distr = sample_random_sources(graph, k, directed=directed)
     return dist_distr
 
 
-def run_anf(graph, k, r, num_dist, directed=True):
+def run_anf(graph, k, r, num_dist, directed=True, parallel=False):
+    if parallel:
+        print "Parallel version not implemented - running single core..."
     dist_distr = anf0(graph, k=k, r=r, num_dist=num_dist, directed=directed)
     return dist_distr
 
@@ -47,6 +60,8 @@ def main():
     parser.add_argument("fname", help="Filename to read")
     parser.add_argument("-c", "--clean", default=False, action="store_true",
                         help="Clean file")
+    parser.add_argument("-s", "--single", default=False, action="store_true",
+                        help="Run single core version")
     parser.add_argument("-undir", "--undirected", default=False, action="store_true",
                         help="Treat graph as undirected")
 
@@ -74,12 +89,14 @@ def main():
                             help="Num bits to add to bitstring of length log(n)")
     parser_anf.add_argument('-k', type=int, nargs=1, default=0,
                             help="Num parallel approximations")
-    parser_anf.add_argument('-num-dist', type=int, nargs=1, default=20,
+    parser_anf.add_argument('-d', type=int, nargs=1, default=20,
                             help="Num distances to approximate")
     parser_anf.set_defaults(mode=ANF)
 
     args = parser.parse_args()
     print args  # For debugging purposes
+
+    parallel = not args.single
 
     start_time = time.time()
 
@@ -108,7 +125,7 @@ def main():
 
     print "Computing the distance distribution..."
     if args.mode == EXACT:
-        dist_distr = run_exact(lcc, directed=directed)
+        dist_distr = run_exact(lcc, directed=directed, parallel=parallel)
 
     elif args.mode == RAND_PAIRS:
         try:
@@ -116,7 +133,8 @@ def main():
         except TypeError:
             k = args.k
 
-        dist_distr = run_random_pairs(lcc, k, directed=directed)
+        dist_distr = run_random_pairs(lcc, k,
+                                      directed=directed, parallel=parallel)
 
     elif args.mode == RAND_SOURCES:
         try:
@@ -124,7 +142,8 @@ def main():
         except TypeError:
             k = args.k
 
-        dist_distr = run_random_sources(lcc, k, directed=directed)
+        dist_distr = run_random_sources(lcc, k,
+                                        directed=directed, parallel=parallel)
 
     else:
         try:
@@ -136,11 +155,12 @@ def main():
         except TypeError:
             k = args.k
         try:
-            num_dist = args.num_dist[0]
+            num_dist = args.d[0]
         except TypeError:
-            num_dist = args.num_dist
+            num_dist = args.d
 
-        dist_distr = run_anf(graph, k=k, r=r, num_dist=num_dist, directed=directed)
+        dist_distr = run_anf(graph, k=k, r=r, num_dist=num_dist,
+                             directed=directed, parallel=parallel)
 
     stats = compute_statistics(dist_distr)
     print_statistics(*stats)
