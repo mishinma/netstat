@@ -51,22 +51,18 @@ diameter and effective diameter) for large networks.
        * `-h` - help
    
    Algoritm-specific optional arguments:
-   
    * `exact` usage: `netstat fname exact [-h]`
-   
    * `randp` usage: `netstat fname randp [-h] [-k K | -p P]` 
-   ..* `-k` - sample size (number of pairs) 
-   ..* `-p` - sample size (precentage of the total number nodes)
+     * `-k` - sample size (number of pairs) 
+     * `-p` - sample size (precentage of the total number nodes)
    By default, the sample size is set to 10% of the total number of nodes.   
-   
    * `rands` usage: `netstat fname rands [-h] [-k K | -p P]`
    Optional arguments are the same as `randp`.
-   
    * `anf` usage: `netstat fname anf [-h] [-r R] [-k K] [-h H]`  
-   ..* `-r` - number of bits to add to bitstring of length `log(n)`,
+     * `-r` - number of bits to add to bitstring of length `log(n)`,
    where `n` is number of nodes. (Default: 0)
-   ..* `-k` - number of parallel approximations. (Default: 3)
-   ..* `-h` - number of distances to approximate. (Default: 20)
+     * `-k` - number of parallel approximations. (Default: 3)
+     * `-h` - number of distances to approximate. (Default: 20)
    
 ### Example usage:
 ```
