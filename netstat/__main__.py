@@ -52,7 +52,59 @@ def run_anf(graph, k, r, num_dist, directed=True, parallel=False):
     return dist_distr
 
 
-def main():
+def main(fname, mode, clean=False, parallel=True, directed=False,
+         connection='strong', **kwargs):
+
+    start_time = time.time()
+
+    if clean:
+        print "Cleaning the file"
+        root, ext = os.path.splitext(fname)
+        fname_new = root + '-clean' + ext
+        clean_file(fname, fname_new)
+        fname = fname_new
+
+    print "Loading the graph data..."
+    num_nodes, num_edges, graph_data = load_graph_data(fname)
+
+    print "Building the adjacency matrix..."
+    graph = build_graph(num_nodes, num_edges, graph_data)
+
+    if not args.undirected:
+        connection, directed = 'strong', True
+    else:
+        connection, directed = 'weak', False
+
+    print "Finding the largest connected component..."
+    lcc = largest_connected_component(graph, connection=connection)
+
+    print "Computing the distance distribution..."
+    if mode == EXACT:
+        dist_distr = run_exact(lcc, directed=directed, parallel=parallel)
+
+    elif mode == RAND_PAIRS:
+        k = kwargs['k']
+        dist_distr = run_random_pairs(lcc, k,
+                                      directed=directed, parallel=parallel)
+
+    elif mode == RAND_SOURCES:
+        k = kwargs['k']
+        dist_distr = run_random_sources(lcc, k,
+                                        directed=directed, parallel=parallel)
+
+    else:
+        k, r, num_dist = kwargs['k'], kwargs['r'], kwargs['num_dist']
+        dist_distr = run_anf(graph, k=k, r=r, num_dist=num_dist,
+                             directed=directed, parallel=parallel)
+
+    stats = compute_statistics(dist_distr)
+    print_statistics(*stats)
+
+    elapsed = (time.time() - start_time)
+    print "--- {} m ---".format(elapsed / 60)
+
+
+if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      prog='netstat')
@@ -87,63 +139,39 @@ def main():
     parser_anf = subparsers.add_parser('anf', help='ANF0 help')
     parser_anf.add_argument('-r', type=int, nargs=1, default=0,
                             help="Num bits to add to bitstring of length log(n)")
-    parser_anf.add_argument('-k', type=int, nargs=1, default=0,
+    parser_anf.add_argument('-k', type=int, nargs=1, default=3,
                             help="Num parallel approximations")
     parser_anf.add_argument('-d', type=int, nargs=1, default=20,
                             help="Num distances to approximate")
     parser_anf.set_defaults(mode=ANF)
 
     args = parser.parse_args()
-    print args  # For debugging purposes
+    # print args
 
     parallel = not args.single
 
-    start_time = time.time()
+    mode = args.mode
 
-    fname = args.fname
+    kwargs = dict()
 
-    if args.clean:
-        print "Cleaning the file"
-        root, ext = os.path.splitext(fname)
-        fname_new = root + '-clean' + ext
-        clean_file(fname, fname_new)
-        fname = fname_new
+    if mode == EXACT:
+        pass
 
-    print "Loading the graph data..."
-    num_nodes, num_edges, graph_data = load_graph_data(fname)
-
-    print "Building the adjacency matrix..."
-    graph = build_graph(num_nodes, num_edges, graph_data)
-
-    if not args.undirected:
-        connection, directed = 'strong', True
-    else:
-        connection, directed = 'weak', False
-
-    print "Finding the largest connected component..."
-    lcc = largest_connected_component(graph, connection=connection)
-
-    print "Computing the distance distribution..."
-    if args.mode == EXACT:
-        dist_distr = run_exact(lcc, directed=directed, parallel=parallel)
-
-    elif args.mode == RAND_PAIRS:
+    elif mode == RAND_PAIRS:
         try:
             k = args.k[0]
         except TypeError:
             k = args.k
 
-        dist_distr = run_random_pairs(lcc, k,
-                                      directed=directed, parallel=parallel)
+        kwargs['k'] = k
 
-    elif args.mode == RAND_SOURCES:
+    elif mode == RAND_SOURCES:
         try:
             k = args.k[0]
         except TypeError:
             k = args.k
 
-        dist_distr = run_random_sources(lcc, k,
-                                        directed=directed, parallel=parallel)
+        kwargs['k'] = k
 
     else:
         try:
@@ -159,15 +187,9 @@ def main():
         except TypeError:
             num_dist = args.d
 
-        dist_distr = run_anf(graph, k=k, r=r, num_dist=num_dist,
-                             directed=directed, parallel=parallel)
+        kwargs['r'] = r
+        kwargs['k'] = k
+        kwargs['num_dist'] = num_dist
 
-    stats = compute_statistics(dist_distr)
-    print_statistics(*stats)
-
-    elapsed = (time.time() - start_time)
-    print "--- {} m ---".format(elapsed / 60)
-
-
-if __name__ == '__main__':
-    main()
+    main(fname=args.fname, mode=args.mode, clean=args.clean,
+         parallel=parallel, **kwargs)
