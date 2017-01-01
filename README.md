@@ -59,7 +59,7 @@ diameter and effective diameter) for large networks.
    By default, the sample size is set to 10% of the total number of nodes.   
    * `rands` usage: `netstat fname rands [-h] [-k K | -p P]`
    
-   Optional arguments are the same as `randp`.
+   Optional arguments are the same as in `randp`.
    * `anf` usage: `netstat fname anf [-h] [-r R] [-k K] [-h H]`  
      * `-r` - number of bits to add to bitstring of length `log(n)`,
    where `n` is number of nodes. (Default: 0)
