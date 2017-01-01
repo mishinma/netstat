@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 
 from math import ceil, log
-from scipy import stats
 from scipy.sparse import csr_matrix, csgraph
 
 
@@ -84,52 +83,6 @@ def binrepr(arr, l=None):
                 res[i, j] = np.binary_repr(arr[i,j],  width=l)
 
     return res
-
-
-def least_zero_bit(arr):
-    res = np.empty(arr.shape, dtype=np.int32)
-    i = 0
-    set_mask = np.zeros(arr.shape, dtype=bool)
-    while True:
-        lzb = np.bitwise_and(arr, 1) == 0
-        res[np.logical_and(lzb, np.logical_not(set_mask))] = i
-        arr = np.right_shift(arr, 1)
-        set_mask = np.logical_or(set_mask, lzb)
-        i += 1
-        if np.all(set_mask):
-            break
-
-    return res
-
-
-def set_bits(n, r, k):
-    """
-    Create an approximate M(x,O)
-
-    :param n: number of nodes
-    :param r: some small constant
-    :param k: number of approximations
-    :return: M(x,0) represented as np.array of ints
-    """
-    # Calculate the length of bitstring
-    l = int(ceil(log(n, 2))) + r
-    # Create a custom pmf for given l
-    xk = np.arange(l + 1)  # value l means no bit set
-    pk = [P ** (i + 1) for i in range(l)]
-    # The prob. of not setting any bit is equal
-    # to the prob. of setting the last bit
-    pk.append(pk[-1])
-    geom2 = stats.rv_discrete(name='geom2', values=(xk, pk))
-    bits = geom2.rvs(size=k*n)  # Sample k*n values from the pmf
-    bits.shape = (n,k)
-
-    # Create M(x,0)
-    M = np.ones((n,k), dtype=np.int32)
-    M = np.left_shift(M, bits)
-    mask = int('1' * l, 2)
-    M = np.bitwise_and(M, mask)
-
-    return M
 
 
 def print_statistics(mean, median, diam, eff_diam):
