@@ -2,8 +2,6 @@ import os
 import sys
 import subprocess
 
-# ToDo: Write it as a bash script?
-
 
 class Cleaner(object):
 
