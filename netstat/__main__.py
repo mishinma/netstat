@@ -70,11 +70,6 @@ def main(fname, mode, clean=False, parallel=True, directed=False,
     print "Building the adjacency matrix..."
     graph = build_graph(num_nodes, num_edges, graph_data)
 
-    if not args.undirected:
-        connection, directed = 'strong', True
-    else:
-        connection, directed = 'weak', False
-
     print "Finding the largest connected component..."
     lcc = largest_connected_component(graph, connection=connection)
 
@@ -150,6 +145,11 @@ if __name__ == '__main__':
 
     parallel = not args.single
 
+    if not args.undirected:
+        connection, directed = 'strong', True
+    else:
+        connection, directed = 'weak', False
+
     mode = args.mode
 
     kwargs = dict()
@@ -191,5 +191,5 @@ if __name__ == '__main__':
         kwargs['k'] = k
         kwargs['num_dist'] = num_dist
 
-    main(fname=args.fname, mode=args.mode, clean=args.clean,
-         parallel=parallel, **kwargs)
+    main(fname=args.fname, mode=args.mode, clean=args.clean, connection=connection,
+         directed=directed, parallel=parallel, **kwargs)
