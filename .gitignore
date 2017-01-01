@@ -1,7 +1,7 @@
 .cache
 .idea
 build
-newstat.egg-info
+netstat.egg-info
 sw
 .venv
 virtualenv-15.1.0

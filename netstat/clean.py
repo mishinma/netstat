@@ -64,12 +64,17 @@ def clean_file(fname_old, fname_new):
     )
 
 
-if __name__ == '__main__':
-
+def main():
     fname_old = sys.argv[1]
-    root, ext = os.path.splitext(fname_old)
-    fname_new = root + '-clean' + ext
-
+    if len(sys.argv) > 2:
+        fname_new = sys.argv[2]
+    else:
+        root, ext = os.path.splitext(fname_old)
+        fname_new = root + '-clean' + ext
     clean_file(fname_old, fname_new)
+
+
+if __name__ == '__main__':
+    main()
 
 

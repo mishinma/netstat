@@ -52,7 +52,7 @@ def run_anf(graph, k, r, num_dist, directed=True, parallel=False):
     return dist_distr
 
 
-def main(fname, mode, clean=False, parallel=True, directed=False,
+def run_netstat(fname, mode, clean=False, parallel=True, directed=False,
          connection='strong', **kwargs):
 
     start_time = time.time()
@@ -99,8 +99,7 @@ def main(fname, mode, clean=False, parallel=True, directed=False,
     print "--- {} m ---".format(elapsed / 60)
 
 
-if __name__ == '__main__':
-
+def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      prog='netstat')
 
@@ -191,5 +190,9 @@ if __name__ == '__main__':
         kwargs['k'] = k
         kwargs['num_dist'] = num_dist
 
-    main(fname=args.fname, mode=args.mode, clean=args.clean, connection=connection,
+    run_netstat(fname=args.fname, mode=args.mode, clean=args.clean, connection=connection,
          directed=directed, parallel=parallel, **kwargs)
+
+
+if __name__ == "__main__":
+    main()
