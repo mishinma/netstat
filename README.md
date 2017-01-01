@@ -77,25 +77,24 @@ diameter and effective diameter) for large networks.
    ..* `-k` - number of parallel approximations. (Default: 3)
    ..* `-h` - number of distances to approximate. (Default: 20)
    
-   
-   Example usage:
-   ```
-   (.venv) misha@misha:~/dev/netstat$ netstat-run ~/docs/netstat/data/wiki-Vote-clean.txt -u anf -k 10
-   ```
-   
-   To get help message run:
-   ```
-   netstat-run test.in
-   # or
-   netstat-run test.in anf -h
-   ```
-   
-   Note: cleaning the file by default will create another file
-   with suffix "-clean" in the same directory as the original file.
-   Alternatively, you can use the script `clean`:
-   ```
-   clean fname_old [fname_new]
-   ```
+### Example usage:
+```
+(.venv) misha@misha:~/dev/netstat$ netstat-run ~/docs/netstat/data/wiki-Vote-clean.txt -u anf -k 10
+```
+
+To get help message run:
+```
+netstat-run test.in
+# or
+netstat-run test.in anf -h
+```
+
+**Note**: cleaning the file by default will create another file
+with suffix "-clean" in the same directory as the original file.
+Alternatively, you can use the script `clean`:
+```
+clean fname_old [fname_new]
+```
    
     
 ## Platform Issues
