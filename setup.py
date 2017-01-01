@@ -12,6 +12,6 @@ setup(
       'netstat',
       'netstat/graph'
     ],
-    ext_modules = cythonize('netstat/graph/graph.pyx'),
-    include_dirs = [np.get_include()]
+    ext_modules=cythonize('netstat/graph/graph.pyx'),
+    include_dirs=[np.get_include()]
 )
