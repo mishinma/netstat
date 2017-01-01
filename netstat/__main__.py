@@ -71,6 +71,8 @@ def run_netstat(fname, mode, clean=False, parallel=True, directed=False,
     print "Finding the largest connected component..."
     lcc = largest_connected_component(graph, connection=connection)
 
+    print "Nodes: {}, Edges: {}".format(lcc.shape[0], lcc.data.shape[0])
+
     print "Computing the distance distribution..."
 
     start_time = time.time()
