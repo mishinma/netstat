@@ -81,19 +81,19 @@ def run_netstat(fname, mode, clean=False, parallel=True, directed=False,
     elif mode == RAND_PAIRS or mode == RAND_SOURCES:
         try:
             k = kwargs['k']
-            if k > num_nodes:
+            if k > lcc.shape[0]:
                 print "Sample size is bigger than amount of available nodes. "\
                       "Running with complete graph."
-                k = num_nodes
+                k = lcc.shape[0]
         except KeyError:
             p = kwargs['p']
             if p > 100:
                 print "Provided percentage is larger than 100%. "\
                       "Running with complete graph."
                 p = 100
-            k = int(float(p)/100*num_nodes)
+            k = int(float(p)/100*lcc.shape[0])
 
-        print "Sample size: %d (~%d%%)" % (k, int(float(k)/num_nodes*100))
+        print "Sample size: %d (~%d%%)" % (k, int(float(k)/lcc.shape[0]*100))
         if mode == RAND_PAIRS:
             dist_distr = run_random_pairs(lcc, k,
                                           directed=directed, parallel=parallel)
