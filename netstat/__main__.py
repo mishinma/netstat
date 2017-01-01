@@ -53,9 +53,7 @@ def run_anf(graph, k, r, num_dist, directed=True, parallel=False):
 
 
 def run_netstat(fname, mode, clean=False, parallel=True, directed=False,
-         connection='strong', **kwargs):
-
-    start_time = time.time()
+                connection='strong', **kwargs):
 
     if clean:
         print "Cleaning the file"
@@ -74,18 +72,34 @@ def run_netstat(fname, mode, clean=False, parallel=True, directed=False,
     lcc = largest_connected_component(graph, connection=connection)
 
     print "Computing the distance distribution..."
+
+    start_time = time.time()
+
     if mode == EXACT:
         dist_distr = run_exact(lcc, directed=directed, parallel=parallel)
 
-    elif mode == RAND_PAIRS:
-        k = kwargs['k']
-        dist_distr = run_random_pairs(lcc, k,
-                                      directed=directed, parallel=parallel)
+    elif mode == RAND_PAIRS or mode == RAND_SOURCES:
+        try:
+            k = kwargs['k']
+            if k > num_nodes:
+                print "Sample size is bigger than amount of available nodes. "\
+                      "Running with complete graph."
+                k = num_nodes
+        except KeyError:
+            p = kwargs['p']
+            if p > 100:
+                print "Provided percentage is larger than 100%. "\
+                      "Running with complete graph."
+                p = 100
+            k = int(float(p)/100*num_nodes)
 
-    elif mode == RAND_SOURCES:
-        k = kwargs['k']
-        dist_distr = run_random_sources(lcc, k,
-                                        directed=directed, parallel=parallel)
+        print "Sample size: %d (~%d%%)" % (k, int(float(k)/num_nodes*100))
+        if mode == RAND_PAIRS:
+            dist_distr = run_random_pairs(lcc, k,
+                                          directed=directed, parallel=parallel)
+        else:
+            dist_distr = run_random_sources(lcc, k,
+                                            directed=directed, parallel=parallel)
 
     else:
         k, r, num_dist = kwargs['k'], kwargs['r'], kwargs['num_dist']
@@ -119,14 +133,20 @@ def main():
 
     # Random Pairs parser
     parser_randp = subparsers.add_parser('randp', help='Random Pairs help')
-    parser_randp.add_argument('-k', type=int, nargs=1, default=2000,
-                              help='Sample size')
+    randp_arg = parser_randp.add_mutually_exclusive_group()
+    randp_arg.add_argument('-k', type=int, nargs=1,
+                           help='Sample size (number of nodes)')
+    randp_arg.add_argument('-p', type=int, nargs=1, default=10,
+                           help='Sample size (percentage of total nodes)')
     parser_randp.set_defaults(mode=RAND_PAIRS)
 
     # Random Sources parser
     parser_rands = subparsers.add_parser('rands', help='Random Sources help')
-    parser_rands.add_argument('-k', type=int, nargs=1, default=2000,
-                              help='Sample size')
+    rands_arg = parser_rands.add_mutually_exclusive_group()
+    rands_arg.add_argument('-k', type=int, nargs=1,
+                           help='Sample size (number of nodes)')
+    rands_arg.add_argument('-p', type=int, nargs=1, default=10,
+                           help='Sample size (percentage of total nodes)')
     parser_rands.set_defaults(mode=RAND_SOURCES)
 
     # ANF parser
@@ -156,21 +176,21 @@ def main():
     if mode == EXACT:
         pass
 
-    elif mode == RAND_PAIRS:
-        try:
-            k = args.k[0]
-        except TypeError:
-            k = args.k
+    elif mode == RAND_PAIRS or mode == RAND_SOURCES:
+        if args.k:
+            try:
+                k = args.k[0]
+            except TypeError:
+                k = args.k
 
-        kwargs['k'] = k
+            kwargs['k'] = k
+        else:
+            try:
+                p = args.p[0]
+            except TypeError:
+                p = args.p
 
-    elif mode == RAND_SOURCES:
-        try:
-            k = args.k[0]
-        except TypeError:
-            k = args.k
-
-        kwargs['k'] = k
+            kwargs['p'] = p
 
     else:
         try:
