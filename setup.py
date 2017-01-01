@@ -16,7 +16,7 @@ setup(
     include_dirs=[np.get_include()],
     entry_points={
           'console_scripts': [
-              'netstat = netstat.__main__:main',
+              'netstat-run = netstat.__main__:main',
               'clean = netstat.clean:main'
           ]}
 )
