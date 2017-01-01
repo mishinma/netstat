@@ -4,9 +4,6 @@ import subprocess
 
 # ToDo: Write it as a bash script?
 
-class FileFormatError(Exception):
-    pass
-
 
 class Cleaner(object):
 
@@ -58,7 +55,7 @@ def clean_file(fname_old, fname_new):
 
 
     subprocess.call(
-        "echo '{num_nodes} {num_edges}' | cat - {fname_new} > temp && mv temp {fname_new}" \
+        "echo '#!clean\n{num_nodes} {num_edges}' | cat - {fname_new} > temp && mv temp {fname_new}" \
             .format(num_nodes=num_nodes, num_edges=num_edges, fname_new=fname_new),
         shell=True
     )

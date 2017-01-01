@@ -8,16 +8,25 @@ from scipy.sparse import csr_matrix, csgraph
 
 
 P = .5
+SHEBANG = "#!clean"
+
+
+class FileFormatError(Exception):
+    pass
 
 
 def load_graph_data(fname):
     """ Load graph data from a clean file """
 
     with open(fname, 'r') as f:
+        first_line = next(f).strip()
+        if first_line != SHEBANG:
+            raise FileFormatError("The format of this file is wrong! Please provide option `-c`"
+                                  " or use script `clean` to format the file.")
         num_nodes, num_edges = map(int, next(f).split())
 
     edges = pd.read_csv(fname, sep=' ', names=['FromNodeId', 'ToNodeId'],
-                             dtype={'FromNodeId': np.int32, 'ToNodeId': np.int32}, skiprows=1)
+                             dtype={'FromNodeId': np.int32, 'ToNodeId': np.int32}, skiprows=2)
 
     return num_nodes, num_edges, edges
 
