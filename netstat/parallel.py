@@ -52,7 +52,7 @@ def exact_distance_distribution_parallel(graph, nodes=None, directed=True):
     for proc in processes:
         proc.join()
 
-    return merge_distributions(distributions, directed)
+    return merge_distributions(distributions)
 
 
 def sample_random_pairs_parallel(graph, k, directed):

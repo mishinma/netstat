@@ -8,9 +8,11 @@ from scipy import stats
 from scipy.sparse import csr_matrix, csgraph
 
 
+P = .5
+
+
 def load_graph_data(fname):
     """ Load graph data from a clean file """
-    print "Loading the graph data..."
 
     with open(fname, 'r') as f:
         num_nodes, num_edges = map(int, next(f).split())
@@ -23,7 +25,6 @@ def load_graph_data(fname):
 
 def build_graph(num_nodes, num_edges, edges):
     """ Create a sparse CSR matrix representing the graph """
-    print "Building the adjacency matrix..."
 
     edges = edges.values  # Access values as np array
 
@@ -43,7 +44,6 @@ def build_graph(num_nodes, num_edges, edges):
 def largest_connected_component(graph, connection='strong'):
     """ Get the largest connected component and return it as a submatrix """
 
-    print "Finding the largest connected component..."
 
     num_components, labels = csgraph.connected_components(graph, connection=connection)
     lcc_label = np.argmax(np.bincount(labels))  # Find the largest label
@@ -130,3 +130,10 @@ def set_bits(n, r, k):
     M = np.bitwise_and(M, mask)
 
     return M
+
+
+def print_statistics(mean, median, diam, eff_diam):
+    print "Mean: {}".format(mean)
+    print "Median: {}".format(median)
+    print "Diameter: {}".format(diam)
+    print "Eff diameter: {}".format(eff_diam)

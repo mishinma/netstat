@@ -19,8 +19,6 @@ def exact_distance_distribution(graph, nodes=None, directed=True):
     if nodes is None:
         nodes = np.arange(graph.shape[0])  # Run for all nodes
 
-    print "Computing the distance distribution..."
-
     # Assume there will be at most 100 different distances in the distribution
     # The actual length is 101 so that indices correspond to distances' values.
     dist_distr = np.zeros(shape=MAX_NUM_DIST, dtype=np.int64)
