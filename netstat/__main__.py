@@ -164,7 +164,7 @@ def main():
                             help="Num bits to add to bitstring of length log(n)")
     parser_anf.add_argument('-k', type=int, nargs=1, default=3,
                             help="Num parallel approximations")
-    parser_anf.add_argument('-h', type=int, nargs=1, default=20,
+    parser_anf.add_argument('-d', type=int, nargs=1, default=20,
                             help="Num distances to approximate")
     parser_anf.set_defaults(mode=ANF)
 
@@ -211,9 +211,9 @@ def main():
         except TypeError:
             k = args.k
         try:
-            num_dist = args.h[0]
+            num_dist = args.d[0]
         except TypeError:
-            num_dist = args.h
+            num_dist = args.d
 
         kwargs['r'] = r
         kwargs['k'] = k

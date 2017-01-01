@@ -60,11 +60,11 @@ diameter and effective diameter) for large networks.
    * `rands` usage: `netstat fname rands [-h] [-k K | -p P]`
    
    Optional arguments are the same as in `randp`.
-   * `anf` usage: `netstat fname anf [-h] [-r R] [-k K] [-h H]`  
+   * `anf` usage: `netstat fname anf [-h] [-r R] [-k K] [-d D]`  
      * `-r` - number of bits to add to bitstring of length `log(n)`,
    where `n` is number of nodes. (Default: 0)
      * `-k` - number of parallel approximations. (Default: 3)
-     * `-h` - number of distances to approximate. (Default: 20)
+     * `-d` - number of distances to approximate. (Default: 20)
    
 ### Example usage:
 ```
