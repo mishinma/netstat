@@ -62,7 +62,7 @@ def main():
                         help="Clean file")
     parser.add_argument("-s", "--single", default=False, action="store_true",
                         help="Run single core version")
-    parser.add_argument("-undir", "--undirected", default=False, action="store_true",
+    parser.add_argument("-u", "--undirected", default=False, action="store_true",
                         help="Treat graph as undirected")
 
     subparsers = parser.add_subparsers(help='sub-command help')
