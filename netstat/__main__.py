@@ -1,8 +1,10 @@
 """ Main script """
 
 import argparse
+import os
 import time
 
+from netstat.clean import clean_file
 from netstat.util import largest_connected_component, \
     load_graph_data, build_graph, print_statistics
 from netstat.statistics import compute_statistics
@@ -43,8 +45,10 @@ def main():
                                      prog='netstat')
 
     parser.add_argument("fname", help="Filename to read")
-    parser.add_argument("-undir", "--undirected", default=False,
-                              help="Treat graph as undirected", action="store_true")
+    parser.add_argument("-c", "--clean", default=False, action="store_true",
+                        help="Clean file")
+    parser.add_argument("-undir", "--undirected", default=False, action="store_true",
+                        help="Treat graph as undirected")
 
     subparsers = parser.add_subparsers(help='sub-command help')
 
@@ -79,8 +83,17 @@ def main():
 
     start_time = time.time()
 
+    fname = args.fname
+
+    if args.clean:
+        print "Cleaning the file"
+        root, ext = os.path.splitext(fname)
+        fname_new = root + '-clean' + ext
+        clean_file(fname, fname_new)
+        fname = fname_new
+
     print "Loading the graph data..."
-    num_nodes, num_edges, graph_data = load_graph_data(args.fname)
+    num_nodes, num_edges, graph_data = load_graph_data(fname)
 
     print "Building the adjacency matrix..."
     graph = build_graph(num_nodes, num_edges, graph_data)
