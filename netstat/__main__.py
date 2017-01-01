@@ -47,8 +47,8 @@ def run_random_sources(graph, k, directed=True, parallel=True):
 
 def run_anf(graph, k, r, num_dist, directed=True, parallel=False):
     if parallel:
-        print "Parallel version not implemented!"
-    print "Running single core version..."
+        print "(Parallel version not implemented!)"
+    print "(Running single core version...)"
     dist_distr = anf0(graph, k=k, r=r, num_dist=num_dist, directed=directed)
     return dist_distr
 
@@ -78,9 +78,9 @@ def run_netstat(fname, mode, clean=False, parallel=True, directed=False,
 
     if not mode == ANF:
         if parallel:
-            print "Running parallel version..."
+            print "(Running parallel version...)"
         else:
-            print "Running single core version..."
+            print "(Running single core version...)"
 
     start_time = time.time()
 
