@@ -32,7 +32,8 @@ diameter and effective diameter) for large networks.
 ## Usage
 
    To run Netstat in the command line you should use the script `netstat-run`. 
-   The package is implemented to work with the networks from [Stanford Large Network Dataset Collection](https://snap.stanford.edu/data/#socnets)
+   The package is implemented to work with the networks from [Stanford Large Network Dataset Collection](https://snap.stanford.edu/data/#socnets).
+   
    The usage is as follows:
    ```
    netstat-run [-h] [-c] [-s] [-u] fname {exact,randp,rands,anf} ...
